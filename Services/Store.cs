@@ -28,11 +28,28 @@ public class Store
 
     public Customer[] CreateCustomers(int count, Random random)
     {
+        if (count < 1 || count > 1000)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(count),
+                "Кількість покупців повинна бути від 1 до 1000.");
+        }
+
         Customer[] customers = new Customer[count];
+        bool[] usedCardNumbers = new bool[1001];
 
         for (int i = 0; i < customers.Length; i++)
         {
-            int cardNumber = random.Next(1, 1001);
+            int cardNumber;
+
+            do
+            {
+                cardNumber = random.Next(1, 1001);
+            }
+            while (usedCardNumbers[cardNumber]);
+
+            usedCardNumbers[cardNumber] = true;
+
             decimal money = random.Next(1000, 10001);
             customers[i] = new Customer(cardNumber, money);
         }
@@ -70,7 +87,7 @@ public class Store
             if (AreAllProductsOutOfStock())
             {
                 Console.WriteLine();
-                Console.WriteLine("У магазині закінчилися всі товари.");
+                Console.WriteLine("У магазині закінчилися всі товари. Решта покупців не можуть здійснити покупки.");
                 break;
             }
         }
