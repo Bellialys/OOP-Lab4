@@ -8,7 +8,9 @@ internal class Program
 {
     private static void Main()
     {
+        Console.InputEncoding = Encoding.UTF8;
         Console.OutputEncoding = Encoding.UTF8;
+
         SocialNetwork socialNetwork = new SocialNetwork();
 
         while (true)
@@ -55,7 +57,10 @@ internal class Program
         Console.WriteLine("ЗАВДАННЯ 1. СИМУЛЯЦІЯ ПОКУПЦІВ У МАГАЗИНІ");
         Console.WriteLine();
 
-        int customerCount = ConsoleHelper.ReadPositiveInt("Введіть кількість покупців: ");
+        int customerCount = ConsoleHelper.ReadIntInRange(
+            "Введіть кількість покупців (від 1 до 1000): ",
+            1,
+            1000);
 
         Random random = new Random();
         Store store = new Store();
