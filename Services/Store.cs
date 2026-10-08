@@ -8,12 +8,14 @@ public class Store
     public decimal Profit { get; private set; }
     public int TotalItemsSold { get; private set; }
     public int PayingCustomers { get; private set; }
+    public int ProcessedCustomers { get; private set; }
 
     public Store()
     {
         Profit = 0;
         TotalItemsSold = 0;
         PayingCustomers = 0;
+        ProcessedCustomers = 0;
 
         Products = new Product[]
         {
@@ -85,7 +87,21 @@ public class Store
 
         for (int i = 0; i < customers.Length; i++)
         {
+            if (AreAllProductsOutOfStock())
+            {
+                int remainingCustomers = customers.Length - i;
+
+                Console.WriteLine();
+                Console.WriteLine(
+                    "У магазині закінчилися всі товари.");
+                Console.WriteLine(
+                    $"Без покупок залишилося покупців: {remainingCustomers}.");
+
+                break;
+            }
+
             Customer customer = customers[i];
+            ProcessedCustomers++;
 
             Console.WriteLine();
             Console.WriteLine($"Покупець  : {i + 1}");
@@ -234,8 +250,12 @@ public class Store
                 ? Profit / PayingCustomers
                 : 0;
 
-        Console.WriteLine($"Кількість покупців: {customers.Length}");
+        Console.WriteLine($"Заплановано покупців: {customers.Length}");
+        Console.WriteLine($"Обслуговано покупців: {ProcessedCustomers}");
         Console.WriteLine($"Покупців із покупками: {PayingCustomers}");
+        Console.WriteLine(
+            $"Не обслуговано через відсутність товару: " +
+            $"{customers.Length - ProcessedCustomers}");
         Console.WriteLine($"Продано одиниць товару: {TotalItemsSold}");
         Console.WriteLine($"Прибуток магазину: {Profit:N2} грн");
         Console.WriteLine($"Середній чек: {averageReceipt:N2} грн");
@@ -428,6 +448,17 @@ public class Store
         }
 
         return result;
+    }
+
+    private bool AreAllProductsOutOfStock()
+    {
+        foreach (Product product in Products)
+        {
+            if (product.Quantity > 0)
+                return false;
+        }
+
+        return true;
     }
 
     private void ShowReceipt(Customer customer, int receiptNumber)
