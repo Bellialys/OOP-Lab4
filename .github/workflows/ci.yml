@@ -1,0 +1,33 @@
+name: C# Build and Self-Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Install .NET 11 preview SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Restore
+        run: dotnet restore OOP-Lab4.csproj
+
+      - name: Build
+        run: dotnet build OOP-Lab4.csproj --no-restore --configuration Release
+
+      - name: Run built-in self-tests
+        run: dotnet run --project OOP-Lab4.csproj --configuration Release --no-build -- --self-test

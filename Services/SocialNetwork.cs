@@ -17,28 +17,39 @@ public class SocialNetwork
     {
         while (true)
         {
-            Console.WriteLine();
-            Console.WriteLine("==============================================");
-            Console.WriteLine("       СИМУЛЯЦІЯ СОЦІАЛЬНОЇ МЕРЕЖІ");
-            Console.WriteLine("==============================================");
-            Console.WriteLine($"Поточний користувач: {_currentUser.Name} ({_currentUser.Nickname})");
-            Console.WriteLine();
-            Console.WriteLine("1 - Показати всіх користувачів");
-            Console.WriteLine("2 - Отримати останні 5 постів іншого користувача");
-            Console.WriteLine("3 - Поставити лайк посту іншого користувача");
-            Console.WriteLine("4 - Написати коментар до поста іншого користувача");
-            Console.WriteLine("5 - Створити новий пост");
-            Console.WriteLine("6 - Видалити свій пост");
-            Console.WriteLine("7 - Показати свої пости");
-            Console.WriteLine("8 - Змінити поточного користувача");
-            Console.WriteLine("0 - Повернутися до головного меню");
+            ConsoleUI.WriteBanner(
+                "SOCIAL HUB",
+                "СИМУЛЯЦІЯ СОЦІАЛЬНОЇ МЕРЕЖІ");
 
-            int choice = ConsoleHelper.ReadIntInRange("Ваш вибір: ", 0, 8);
+            Console.WriteLine(
+                $"👤 Ви увійшли як {_currentUser.Avatar} " +
+                $"{_currentUser.Name} ({_currentUser.Nickname})");
+            Console.WriteLine(
+                $"📝 Дописів: {_currentUser.Posts.Count}   " +
+                $"👥 Підписок: {_currentUser.FollowingCount}   " +
+                $"⭐ Підписників: {CountFollowers(_currentUser)}");
+            Console.WriteLine();
+
+            ConsoleUI.WriteMenuItem(1, "📰 Моя стрічка (дописи підписок)");
+            ConsoleUI.WriteMenuItem(2, "🔍 Останні 5 дописів іншого користувача");
+            ConsoleUI.WriteMenuItem(3, "❤️  Вподобати або відреагувати на допис");
+            ConsoleUI.WriteMenuItem(4, "💬 Прокоментувати чужий допис");
+            ConsoleUI.WriteMenuItem(5, "✍️  Створити власний допис");
+            ConsoleUI.WriteMenuItem(6, "🗑️  Видалити свій допис");
+            ConsoleUI.WriteMenuItem(7, "👤 Мій профіль та дописи");
+            ConsoleUI.WriteMenuItem(8, "👥 Користувачі та підписки");
+            ConsoleUI.WriteMenuItem(9, "🔄 Змінити користувача");
+            ConsoleUI.WriteMenuItem(10, "🔥 Популярні дописи");
+            ConsoleUI.WriteMenuExit("⬅️  Повернутися до головного меню");
+            Console.WriteLine();
+
+            int choice = ConsoleHelper.ReadIntInRange(
+                "Ваш вибір: ", 0, 10);
 
             switch (choice)
             {
                 case 1:
-                    ShowAllUsers();
+                    ShowFeed();
                     ConsoleHelper.Pause();
                     break;
                 case 2:
@@ -46,11 +57,11 @@ public class SocialNetwork
                     ConsoleHelper.Pause();
                     break;
                 case 3:
-                    LikeOtherUserPost();
+                    ReactToOtherPost();
                     ConsoleHelper.Pause();
                     break;
                 case 4:
-                    CommentOtherUserPost();
+                    CommentOtherPost();
                     ConsoleHelper.Pause();
                     break;
                 case 5:
@@ -62,11 +73,19 @@ public class SocialNetwork
                     ConsoleHelper.Pause();
                     break;
                 case 7:
-                    ShowOwnPosts();
+                    ShowOwnProfile();
                     ConsoleHelper.Pause();
                     break;
                 case 8:
+                    ManageSubscriptions();
+                    ConsoleHelper.Pause();
+                    break;
+                case 9:
                     ChangeCurrentUser();
+                    break;
+                case 10:
+                    ShowTrending();
+                    ConsoleHelper.Pause();
                     break;
                 case 0:
                     return;
@@ -74,178 +93,527 @@ public class SocialNetwork
         }
     }
 
-    private List<User> CreateUsers()
+    public (User Author, Post Post)[] GetFeed(User viewer, int count = 10)
     {
-        User olena = new User("Олена Коваль", "olena.koval@example.com", "@olena");
-        User maksym = new User("Максим Бондар", "maksym.bondar@example.com", "@maksym");
-        User iryna = new User("Ірина Шевченко", "iryna.shevchenko@example.com", "@iryna");
+        if (count <= 0)
+            return Array.Empty<(User, Post)>();
 
-        olena.CreatePost("Сьогодні почала вивчати C#.", new DateTime(2026, 9, 28, 10, 15, 0), 4);
-        olena.CreatePost("Перший клас у моєму навчальному проєкті готовий.", new DateTime(2026, 9, 30, 14, 20, 0), 7);
-        olena.CreatePost("Розбираюся з конструкторами та властивостями.", new DateTime(2026, 10, 1, 18, 5, 0), 5);
-        olena.CreatePost("Сьогодні практика з масивами.", new DateTime(2026, 10, 3, 11, 30, 0), 9);
-        olena.CreatePost("Написала невелику консольну програму.", new DateTime(2026, 10, 5, 16, 45, 0), 12);
-        Post o6 = olena.CreatePost("Готую практичне завдання з ООП.", new DateTime(2026, 10, 7, 9, 10, 0), 15);
+        List<(User Author, Post Post)> entries =
+            new List<(User Author, Post Post)>();
 
-        maksym.CreatePost("Ранкова кава і трохи програмування.", new DateTime(2026, 9, 27, 8, 40, 0), 6);
-        maksym.CreatePost("Спробував новий підхід до структури проєкту.", new DateTime(2026, 9, 29, 19, 0, 0), 8);
-        maksym.CreatePost("Сьогодні повторюю цикли for і while.", new DateTime(2026, 10, 1, 12, 35, 0), 3);
-        Post m4 = maksym.CreatePost("Зробив симуляцію магазину.", new DateTime(2026, 10, 3, 15, 20, 0), 11);
-        maksym.CreatePost("Тестую роботу зі структурами.", new DateTime(2026, 10, 5, 17, 50, 0), 10);
-        maksym.CreatePost("Наступний крок — модель соціальної мережі.", new DateTime(2026, 10, 7, 10, 25, 0), 14);
+        foreach (User user in Users)
+        {
+            if (!viewer.IsFollowing(user))
+                continue;
 
-        iryna.CreatePost("Планую навчання на цей тиждень.", new DateTime(2026, 9, 26, 9, 0, 0), 5);
-        iryna.CreatePost("Практикую методи у C#.", new DateTime(2026, 9, 29, 13, 10, 0), 7);
-        iryna.CreatePost("Розібралася, чим клас відрізняється від об'єкта.", new DateTime(2026, 10, 2, 10, 30, 0), 13);
-        iryna.CreatePost("Сьогодні працюю з колекціями.", new DateTime(2026, 10, 4, 12, 0, 0), 8);
-        iryna.CreatePost("Додала коментарі до постів.", new DateTime(2026, 10, 6, 18, 15, 0), 16);
-        Post i6 = iryna.CreatePost("Проєкт уже майже готовий до тестування.", new DateTime(2026, 10, 7, 11, 40, 0), 18);
+            foreach (Post post in user.Posts)
+                entries.Add((user, post));
+        }
 
-        o6.AddComment(new Comment("@maksym", "Успіхів із завданням!", new DateTime(2026, 10, 7, 10, 5, 0)));
-        m4.AddComment(new Comment("@iryna", "Цікаво подивитися на результат.", new DateTime(2026, 10, 3, 16, 0, 0)));
-        i6.AddComment(new Comment("@olena", "Чекаю на фінальну версію.", new DateTime(2026, 10, 7, 12, 0, 0)));
-
-        return new List<User> { olena, maksym, iryna };
+        return SortAndTake(entries, count);
     }
 
-    private void ShowAllUsers()
+    public (User Author, Post Post)[] GetTrending(int count = 5)
     {
-        Console.WriteLine();
-        Console.WriteLine("========== КОРИСТУВАЧІ ==========");
+        if (count <= 0)
+            return Array.Empty<(User, Post)>();
+
+        List<(User Author, Post Post)> entries =
+            new List<(User Author, Post Post)>();
+
+        foreach (User user in Users)
+        {
+            foreach (Post post in user.Posts)
+                entries.Add((user, post));
+        }
+
+        entries.Sort((a, b) =>
+        {
+            int byLikes = b.Post.Likes.CompareTo(a.Post.Likes);
+            if (byLikes != 0)
+                return byLikes;
+
+            int byDate = b.Post.CreatedAt.CompareTo(a.Post.CreatedAt);
+            return byDate != 0 ? byDate : b.Post.Id.CompareTo(a.Post.Id);
+        });
+
+        return Take(entries, count);
+    }
+
+    private static List<User> CreateUsers()
+    {
+        User olena = new User(
+            "Олена Коваль",
+            "olena.koval@example.com",
+            "@olena",
+            "👩‍💻",
+            "Вивчаю C#, люблю котів 🐱 та каву ☕");
+        User maksym = new User(
+            "Максим Бондар",
+            "maksym.bondar@example.com",
+            "@maksym",
+            "🧑‍💻",
+            "Код, ігри 🎮 та вечірні прогулянки 🌙");
+        User iryna = new User(
+            "Ірина Шевченко",
+            "iryna.shevchenko@example.com",
+            "@iryna",
+            "👩‍🎨",
+            "Малюю 🎨, читаю 📚 і знайомлюся з ООП");
+        User artem = new User(
+            "Артем Мельник",
+            "artem.melnyk@example.com",
+            "@artem",
+            "🧑‍🚀",
+            "Технології 🚀, музика 🎵 та нові ідеї");
+
+        DateTime today = DateTime.Today;
+
+        olena.CreatePost("Перший крок у світі C#! 👩‍💻 #навчання", today.AddDays(-9).AddHours(10), 4);
+        olena.CreatePost("Мій перший клас уже працює! 🎉", today.AddDays(-7).AddHours(14), 7);
+        olena.CreatePost("Сьогодні вивчаю конструктори та властивості 📚", today.AddDays(-5).AddHours(17), 5);
+        olena.CreatePost("Кава ☕ і практика з масивами — гарне поєднання!", today.AddDays(-3).AddHours(11), 9);
+        olena.CreatePost("Написала маленьку консольну програму 💻✨", today.AddDays(-1).AddHours(16), 12);
+        Post olenaLatest = olena.CreatePost("Готую практичне з ООП. Усе вийде! 🚀", today.AddHours(9), 15);
+
+        maksym.CreatePost("Ранкова кава ☕ та трохи коду.", today.AddDays(-8).AddHours(8), 6);
+        maksym.CreatePost("Новий підхід до структури проєкту 🧩", today.AddDays(-6).AddHours(19), 8);
+        maksym.CreatePost("Повторюю цикли for і while 🔁", today.AddDays(-4).AddHours(12), 3);
+        Post maxStore = maksym.CreatePost("Зробив симуляцію магазину 🛒✅", today.AddDays(-3).AddHours(15), 11);
+        maksym.CreatePost("Тестую структури у C# 🧪", today.AddDays(-1).AddHours(18), 10);
+        maksym.CreatePost("Наступний крок — соціальна мережа! 🌐", today.AddHours(10), 14);
+
+        iryna.CreatePost("Планую навчання на тиждень 📅", today.AddDays(-9).AddHours(9), 5);
+        iryna.CreatePost("Практикую методи в C# 🎯", today.AddDays(-7).AddHours(13), 7);
+        iryna.CreatePost("Класи та об'єкти більше не плутаю 🙌", today.AddDays(-5).AddHours(10), 13);
+        iryna.CreatePost("День колекцій і списків 📚", today.AddDays(-3).AddHours(12), 8);
+        iryna.CreatePost("Коментарі до постів працюють! 💬", today.AddDays(-1).AddHours(18), 16);
+        Post irynaLatest = iryna.CreatePost("Моя нова ілюстрація готова 🎨✨", today.AddHours(11), 18);
+
+        artem.CreatePost("Привіт, світ! 👋🌍", today.AddDays(-8).AddHours(12), 6);
+        artem.CreatePost("Слухаю улюблену музику 🎵", today.AddDays(-6).AddHours(16), 8);
+        artem.CreatePost("Ідея нового проєкту 💡", today.AddDays(-4).AddHours(14), 10);
+        artem.CreatePost("Сьогодні розбираюся з GitHub 🐙", today.AddDays(-2).AddHours(17), 12);
+        artem.CreatePost("Все вдалося з першого разу! 🎉", today.AddDays(-1).AddHours(20), 9);
+        artem.CreatePost("Найкращий день для нових експериментів 🔥", today.AddHours(12), 17);
+
+        olenaLatest.AddComment(
+            new Comment("@maksym", "Успіхів! 💪", today.AddHours(10)));
+        maxStore.AddComment(
+            new Comment("@iryna", "Круто, хочу подивитися! 😍", today.AddDays(-2).AddHours(10)));
+        irynaLatest.AddComment(
+            new Comment("@olena", "Дуже гарно! ❤️", today.AddHours(12)));
+
+        olena.Follow(maksym);
+        olena.Follow(iryna);
+        maksym.Follow(olena);
+        maksym.Follow(artem);
+        iryna.Follow(olena);
+        iryna.Follow(maksym);
+        artem.Follow(iryna);
+        artem.Follow(olena);
+
+        return new List<User> { olena, maksym, iryna, artem };
+    }
+
+    private void ShowUsers()
+    {
+        ConsoleUI.WriteSection("КОРИСТУВАЧІ");
 
         for (int i = 0; i < Users.Count; i++)
         {
-            Console.Write($"{i + 1}. ");
-            Users[i].DisplayProfile();
+            User user = Users[i];
+            string followState = ReferenceEquals(user, _currentUser)
+                ? " (це ви)"
+                : _currentUser.IsFollowing(user)
+                    ? " ✅ підписані"
+                    : "";
+
+            Console.WriteLine(
+                $" [{i + 1}] {user.Avatar} {user.Name}  " +
+                $"{user.Nickname}{followState}");
+            Console.WriteLine(
+                $"     📝 {user.Posts.Count} дописів   " +
+                $"⭐ {CountFollowers(user)} підписників");
         }
+    }
+
+    private int CountFollowers(User target)
+    {
+        int count = 0;
+
+        foreach (User user in Users)
+        {
+            if (user.IsFollowing(target))
+                count++;
+        }
+
+        return count;
+    }
+
+    private void ShowFeed()
+    {
+        ConsoleUI.WriteSection("📰 МОЯ СТРІЧКА");
+
+        (User Author, Post Post)[] feed =
+            GetFeed(_currentUser, 10);
+
+        if (feed.Length == 0)
+        {
+            ConsoleUI.WriteWarning(
+                "Стрічка порожня. Підпишіться на користувачів у меню [8].");
+            return;
+        }
+
+        ConsoleUI.WriteInfo(
+            $"Останні {feed.Length} дописів від ваших підписок:");
+        DisplayPosts(feed);
+        QuickInteract(feed);
     }
 
     private void ShowLastFivePosts()
     {
-        User? otherUser = SelectOtherUser();
-        if (otherUser == null)
+        User? selectedUser = SelectOtherUser();
+        if (selectedUser == null)
             return;
 
-        Post[] posts = otherUser.GetLastPosts(5);
+        Post[] posts = selectedUser.GetLastPosts(5);
 
-        Console.WriteLine();
-        Console.WriteLine($"Останні {posts.Length} постів користувача {otherUser.Nickname}:");
-        DisplayPosts(otherUser, posts);
+        ConsoleUI.WriteSection(
+            $"🔍 ОСТАННІ {posts.Length} ДОПИСІВ {selectedUser.Nickname}");
+        DisplayPosts(selectedUser, posts);
     }
 
-    private void LikeOtherUserPost()
+    private void ReactToOtherPost()
     {
-        User? otherUser = SelectOtherUser();
-        if (otherUser == null)
+        User? selectedUser = SelectOtherUser();
+        if (selectedUser == null)
             return;
 
-        Post? post = SelectPost(otherUser);
-        if (post == null)
+        Post? selectedPost = SelectPost(selectedUser);
+        if (selectedPost == null)
             return;
 
-        post.Like();
-
-        Console.WriteLine($"Лайк додано до поста #{post.Id} користувача {otherUser.Nickname}. Тепер лайків: {post.Likes}.");
+        ReactToPost(selectedUser, selectedPost);
     }
 
-    private void CommentOtherUserPost()
+    private void ReactToPost(User author, Post post)
     {
-        User? otherUser = SelectOtherUser();
-        if (otherUser == null)
+        if (ReferenceEquals(author, _currentUser))
+        {
+            ConsoleUI.WriteWarning(
+                "Реакції доступні лише до дописів іншого користувача.");
+            return;
+        }
+
+        ConsoleUI.WriteSection($"РЕАКЦІЯ НА ДОПИС #{post.Id}");
+        ConsoleUI.WriteMenuItem(1, "❤️  Подобається");
+        ConsoleUI.WriteMenuItem(2, "🔥 Вогонь");
+        ConsoleUI.WriteMenuItem(3, "😂 Смішно");
+        ConsoleUI.WriteMenuItem(4, "👏 Браво");
+        ConsoleUI.WriteMenuExit("Скасувати");
+
+        int choice = ConsoleHelper.ReadIntInRange(
+            "Оберіть реакцію: ", 0, 4);
+
+        if (choice == 0)
             return;
 
-        Post? post = SelectPost(otherUser);
-        if (post == null)
+        string emoji = choice switch
+        {
+            1 => "❤️",
+            2 => "🔥",
+            3 => "😂",
+            _ => "👏"
+        };
+
+        if (post.TryAddReaction(_currentUser.Nickname, emoji))
+        {
+            ConsoleUI.WriteSuccess(
+                $"{emoji} Реакцію додано! Уподобань: {post.Likes}.");
+        }
+        else
+        {
+            ConsoleUI.WriteWarning(
+                $"Ви вже відреагували на цей допис: " +
+                $"{post.GetReactionOf(_currentUser.Nickname)}.");
+        }
+    }
+
+    private void CommentOtherPost()
+    {
+        User? selectedUser = SelectOtherUser();
+        if (selectedUser == null)
             return;
 
-        string text = ConsoleHelper.ReadNonEmptyString("Введіть текст коментаря: ");
-        Comment comment = new Comment(_currentUser.Nickname, text, DateTime.Now);
-        post.AddComment(comment);
+        Post? selectedPost = SelectPost(selectedUser);
+        if (selectedPost == null)
+            return;
 
-        Console.WriteLine($"Коментар додано до поста #{post.Id}.");
+        CommentPost(selectedUser, selectedPost);
+    }
+
+    private void CommentPost(User author, Post post)
+    {
+        if (ReferenceEquals(author, _currentUser))
+        {
+            ConsoleUI.WriteWarning(
+                "У цьому завданні коментуємо дописи інших користувачів.");
+            return;
+        }
+
+        string commentText = ConsoleHelper.ReadText(
+            "💬 Ваш коментар (до 160 символів): ", 160);
+
+        post.AddComment(
+            new Comment(_currentUser.Nickname, commentText, DateTime.Now));
+
+        ConsoleUI.WriteSuccess(
+            $"✅ Коментар додано до допису #{post.Id}!");
     }
 
     private void CreateOwnPost()
     {
-        string text = ConsoleHelper.ReadNonEmptyString("Введіть текст нового поста: ");
+        ConsoleUI.WriteSection("✍️  СТВОРИТИ ДОПИС");
+        ConsoleUI.WriteInfo(
+            "Можна використовувати смайлики 😊, хештеги #ООП та звичайний текст.");
+
+        string text = ConsoleHelper.ReadText(
+            "Ваш допис (до 280 символів): ", 280);
+
         Post post = _currentUser.CreatePost(text);
-        Console.WriteLine($"Новий пост створено. ID поста: {post.Id}.");
+
+        ConsoleUI.WriteSuccess(
+            $"✅ Допис #{post.Id} опубліковано від {_currentUser.Nickname}!");
+        post.Display(_currentUser);
     }
 
     private void DeleteOwnPost()
     {
-        if (_currentUser.Posts.Count == 0)
+        Post[] myPosts = _currentUser.GetLastPosts(_currentUser.Posts.Count);
+
+        if (myPosts.Length == 0)
         {
-            Console.WriteLine("У вас немає постів для видалення.");
+            ConsoleUI.WriteWarning("У вас немає дописів для видалення.");
             return;
         }
 
-        ShowOwnPosts();
-        int postId = ConsoleHelper.ReadPositiveInt("Введіть ID свого поста для видалення: ");
+        ConsoleUI.WriteSection("🗑️  ВИДАЛИТИ СВІЙ ДОПИС");
+        DisplayPosts(_currentUser, myPosts);
 
-        if (_currentUser.DeletePost(postId))
-            Console.WriteLine($"Пост #{postId} видалено.");
+        int postId = ConsoleHelper.ReadIntInRange(
+            "ID допису (0 — скасувати): ", 0, int.MaxValue);
+
+        if (postId == 0)
+            return;
+
+        Post? post = _currentUser.FindPost(postId);
+
+        if (post == null)
+        {
+            ConsoleUI.WriteWarning(
+                "Такий допис вам не належить або не існує.");
+            return;
+        }
+
+        ConsoleUI.WriteWarning(
+            $"Підтвердити видалення допису #{post.Id}?");
+        int confirm = ConsoleHelper.ReadIntInRange(
+            "1 — так, 0 — ні: ", 0, 1);
+
+        if (confirm == 1 && _currentUser.DeletePost(postId))
+            ConsoleUI.WriteSuccess("✅ Допис видалено.");
         else
-            Console.WriteLine("Пост із таким ID не знайдено серед ваших постів.");
+            ConsoleUI.WriteInfo("Видалення скасовано.");
     }
 
-    private void ShowOwnPosts()
+    private void ShowOwnProfile()
     {
-        Console.WriteLine();
-        Console.WriteLine($"========== ПОСТИ {_currentUser.Nickname} ==========");
+        ConsoleUI.WriteSection("👤 МІЙ ПРОФІЛЬ");
+        _currentUser.DisplayProfile();
 
-        if (_currentUser.Posts.Count == 0)
+        Console.WriteLine(
+            $"   ⭐ Підписників: {CountFollowers(_currentUser)}");
+
+        Post[] posts =
+            _currentUser.GetLastPosts(_currentUser.Posts.Count);
+
+        ConsoleUI.WriteSection("МОЇ ДОПИСИ");
+        DisplayPosts(_currentUser, posts);
+    }
+
+    private void ManageSubscriptions()
+    {
+        ShowUsers();
+
+        int selected = ConsoleHelper.ReadIntInRange(
+            "Номер користувача (0 — назад): ",
+            0,
+            Users.Count);
+
+        if (selected == 0)
+            return;
+
+        User other = Users[selected - 1];
+
+        if (ReferenceEquals(other, _currentUser))
         {
-            Console.WriteLine("Постів поки немає.");
+            ConsoleUI.WriteWarning("На себе підписатися неможливо.");
             return;
         }
 
-        Post[] posts = _currentUser.GetLastPosts(_currentUser.Posts.Count);
-        DisplayPosts(_currentUser, posts);
+        ConsoleUI.WriteSection($"ПРОФІЛЬ {other.Nickname}");
+        other.DisplayProfile();
+        ConsoleUI.WriteLabel(
+            "Підписників:",
+            CountFollowers(other).ToString());
+
+        string action = _currentUser.IsFollowing(other)
+            ? "Відписатися"
+            : "Підписатися";
+
+        ConsoleUI.WriteMenuItem(1, action);
+        ConsoleUI.WriteMenuExit("Повернутися");
+
+        int choice = ConsoleHelper.ReadIntInRange(
+            "Ваш вибір: ", 0, 1);
+
+        if (choice == 0)
+            return;
+
+        if (_currentUser.IsFollowing(other))
+        {
+            _currentUser.Unfollow(other);
+            ConsoleUI.WriteInfo(
+                $"Ви відписалися від {other.Nickname}.");
+        }
+        else
+        {
+            _currentUser.Follow(other);
+            ConsoleUI.WriteSuccess(
+                $"✅ Тепер ви підписані на {other.Nickname}!");
+        }
     }
 
     private void ChangeCurrentUser()
     {
-        ShowAllUsers();
+        ShowUsers();
 
-        int number = ConsoleHelper.ReadIntInRange("Оберіть номер користувача: ", 1, Users.Count);
-        _currentUser = Users[number - 1];
+        int selected = ConsoleHelper.ReadIntInRange(
+            "Оберіть номер користувача (0 — назад): ",
+            0,
+            Users.Count);
 
-        Console.WriteLine($"Поточний користувач змінений на {_currentUser.Nickname}.");
+        if (selected == 0)
+            return;
+
+        _currentUser = Users[selected - 1];
+
+        ConsoleUI.WriteSuccess(
+            $"✅ Ви увійшли як {_currentUser.Nickname}.");
+    }
+
+    private void ShowTrending()
+    {
+        ConsoleUI.WriteSection("🔥 ПОПУЛЯРНІ ДОПИСИ");
+
+        (User Author, Post Post)[] trending = GetTrending(5);
+
+        ConsoleUI.WriteInfo("ТОП-5 за кількістю вподобань:");
+        DisplayPosts(trending);
+        QuickInteract(trending);
+    }
+
+    private void QuickInteract((User Author, Post Post)[] feed)
+    {
+        Console.WriteLine();
+        ConsoleUI.WriteInfo(
+            "Введіть ID чужого допису, щоб поставити реакцію або коментар.");
+
+        int id = ConsoleHelper.ReadIntInRange(
+            "ID допису (0 — назад): ", 0, int.MaxValue);
+
+        if (id == 0)
+            return;
+
+        foreach ((User author, Post post) in feed)
+        {
+            if (post.Id != id)
+                continue;
+
+            if (ReferenceEquals(author, _currentUser))
+            {
+                ConsoleUI.WriteWarning(
+                    "Це ваш допис. Для взаємодії оберіть чужий.");
+                return;
+            }
+
+            ConsoleUI.WriteMenuItem(1, "❤️  Реакція");
+            ConsoleUI.WriteMenuItem(2, "💬 Коментар");
+            ConsoleUI.WriteMenuExit("Скасувати");
+
+            int action = ConsoleHelper.ReadIntInRange(
+                "Ваш вибір: ", 0, 2);
+
+            if (action == 1)
+                ReactToPost(author, post);
+            else if (action == 2)
+                CommentPost(author, post);
+
+            return;
+        }
+
+        ConsoleUI.WriteWarning(
+            "Допис із таким ID не знайдено у показаному списку.");
     }
 
     private User? SelectOtherUser()
     {
-        ShowAllUsers();
-
-        int number = ConsoleHelper.ReadIntInRange("Оберіть номер іншого користувача: ", 1, Users.Count);
-        User selectedUser = Users[number - 1];
-
-        if (selectedUser == _currentUser)
+        while (true)
         {
-            Console.WriteLine("Для цієї дії потрібно вибрати іншого користувача, а не себе.");
-            return null;
-        }
+            ShowUsers();
 
-        return selectedUser;
+            int selected = ConsoleHelper.ReadIntInRange(
+                "Номер іншого користувача (0 — назад): ",
+                0,
+                Users.Count);
+
+            if (selected == 0)
+                return null;
+
+            User other = Users[selected - 1];
+
+            if (!ReferenceEquals(other, _currentUser))
+                return other;
+
+            ConsoleUI.WriteWarning(
+                "Оберіть іншого користувача, а не себе.");
+        }
     }
 
-    private Post? SelectPost(User user)
+    private Post? SelectPost(User author)
     {
-        if (user.Posts.Count == 0)
+        Post[] posts = author.GetLastPosts(author.Posts.Count);
+
+        if (posts.Length == 0)
         {
-            Console.WriteLine("У вибраного користувача немає постів.");
+            ConsoleUI.WriteWarning(
+                "У цього користувача поки немає дописів.");
             return null;
         }
 
-        Post[] posts = user.GetLastPosts(user.Posts.Count);
-        DisplayPosts(user, posts);
+        DisplayPosts(author, posts);
 
-        int postId = ConsoleHelper.ReadPositiveInt("Введіть ID поста: ");
-        Post? post = user.FindPost(postId);
+        int id = ConsoleHelper.ReadIntInRange(
+            "ID допису (0 — назад): ", 0, int.MaxValue);
+
+        if (id == 0)
+            return null;
+
+        Post? post = author.FindPost(id);
 
         if (post == null)
-            Console.WriteLine("Пост із таким ID у вибраного користувача не знайдено.");
+            ConsoleUI.WriteWarning("Допис не знайдено.");
 
         return post;
     }
@@ -254,15 +622,54 @@ public class SocialNetwork
     {
         if (posts.Length == 0)
         {
-            Console.WriteLine("Постів немає.");
+            ConsoleUI.WriteInfo("Дописів поки немає.");
             return;
         }
 
         foreach (Post post in posts)
+            post.Display(owner);
+
+        Console.WriteLine("────────────────────────────────────────────────────────────");
+    }
+
+    private static void DisplayPosts((User Author, Post Post)[] posts)
+    {
+        if (posts.Length == 0)
         {
-            post.Display(owner.Nickname);
+            ConsoleUI.WriteInfo("Дописів поки немає.");
+            return;
         }
 
-        Console.WriteLine(new string('-', 70));
+        foreach ((User author, Post post) in posts)
+            post.Display(author);
+
+        Console.WriteLine("────────────────────────────────────────────────────────────");
+    }
+
+    private static (User Author, Post Post)[] SortAndTake(
+        List<(User Author, Post Post)> entries,
+        int count)
+    {
+        entries.Sort((a, b) =>
+        {
+            int byDate = b.Post.CreatedAt.CompareTo(a.Post.CreatedAt);
+            return byDate != 0 ? byDate : b.Post.Id.CompareTo(a.Post.Id);
+        });
+
+        return Take(entries, count);
+    }
+
+    private static (User Author, Post Post)[] Take(
+        List<(User Author, Post Post)> entries,
+        int count)
+    {
+        int length = Math.Min(entries.Count, count);
+        (User Author, Post Post)[] result =
+            new (User Author, Post Post)[length];
+
+        for (int i = 0; i < length; i++)
+            result[i] = entries[i];
+
+        return result;
     }
 }

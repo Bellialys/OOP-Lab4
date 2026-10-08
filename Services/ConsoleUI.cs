@@ -22,9 +22,9 @@ public static class ConsoleUI
     public static void WriteSection(string title)
     {
         Console.WriteLine();
-        WriteColored("┌" + new string('─', Width - 2) + "┐", ConsoleColor.DarkCyan);
-        WriteColored("│ " + title.PadRight(Width - 4) + " │", ConsoleColor.DarkCyan);
-        WriteColored("└" + new string('─', Width - 2) + "┘", ConsoleColor.DarkCyan);
+        WriteColored(new string('━', Width - 2), ConsoleColor.DarkCyan);
+        WriteColored("  " + title, ConsoleColor.Cyan);
+        WriteColored(new string('─', Width - 2), ConsoleColor.DarkCyan);
     }
 
     public static void WriteMenuItem(int number, string text)

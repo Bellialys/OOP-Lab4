@@ -1,16 +1,36 @@
 using System.Text;
 using OOP_Lab4.Models;
 using OOP_Lab4.Services;
+using OOP_Lab4.Tests;
 
 namespace OOP_Lab4;
 
 internal class Program
 {
-    private static void Main()
+    private static void Main(string[] args)
     {
         Console.InputEncoding = Encoding.UTF8;
         Console.OutputEncoding = Encoding.UTF8;
 
+        if (args.Length > 0 && args[0] == "--self-test")
+        {
+            Environment.ExitCode = SelfTests.Run();
+            return;
+        }
+
+        try
+        {
+            RunApplication();
+        }
+        catch (EndOfStreamException)
+        {
+            ConsoleUI.WriteWarning(
+                "Ввід завершено. Програму коректно закрито.");
+        }
+    }
+
+    private static void RunApplication()
+    {
         SocialNetwork socialNetwork = new SocialNetwork();
 
         while (true)

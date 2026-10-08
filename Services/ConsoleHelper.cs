@@ -7,12 +7,15 @@ public static class ConsoleHelper
         while (true)
         {
             Console.Write(message);
+            string? input = Console.ReadLine();
 
-            if (int.TryParse(Console.ReadLine(), out int value) && value > 0)
+            if (input == null)
+                throw new EndOfStreamException("Ввід завершено.");
+
+            if (int.TryParse(input, out int value) && value > 0)
                 return value;
 
-            ConsoleUI.WriteError(
-                "Помилка. Введіть ціле число більше нуля.");
+            ConsoleUI.WriteError("❌ Введіть ціле число більше нуля.");
         }
     }
 
@@ -21,30 +24,63 @@ public static class ConsoleHelper
         while (true)
         {
             Console.Write(message);
+            string? input = Console.ReadLine();
 
-            if (int.TryParse(Console.ReadLine(), out int value) &&
+            if (input == null)
+                throw new EndOfStreamException("Ввід завершено.");
+
+            if (int.TryParse(input, out int value) &&
                 value >= min &&
                 value <= max)
             {
                 return value;
             }
 
-            ConsoleUI.WriteError(
-                $"Помилка. Введіть число від {min} до {max}.");
+            ConsoleUI.WriteError($"❌ Введіть число від {min} до {max}.");
         }
     }
 
     public static string ReadNonEmptyString(string message)
     {
+        return ReadText(message, 280);
+    }
+
+    public static string ReadText(string message, int maxLength)
+    {
+        if (maxLength <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maxLength));
+
         while (true)
         {
             Console.Write(message);
             string? value = Console.ReadLine();
 
-            if (!string.IsNullOrWhiteSpace(value))
-                return value.Trim();
+            if (value == null)
+                throw new EndOfStreamException("Ввід завершено.");
 
-            ConsoleUI.WriteError("Рядок не може бути порожнім.");
+            value = value.Trim();
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                ConsoleUI.WriteError("❌ Текст не може бути порожнім.");
+                continue;
+            }
+
+            if (value.Length > maxLength)
+            {
+                ConsoleUI.WriteError(
+                    $"❌ Максимальна довжина — {maxLength} символів.");
+                continue;
+            }
+
+            if (value.Any(char.IsControl))
+            {
+                ConsoleUI.WriteError(
+                    "❌ Керувальні символи в тексті заборонені.");
+                continue;
+            }
+
+            return value;
         }
     }
 
