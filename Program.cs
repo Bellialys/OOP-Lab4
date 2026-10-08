@@ -17,12 +17,19 @@ internal class Program
         {
             PrintHeader();
 
-            Console.WriteLine("1 - Симуляція покупців у магазині");
-            Console.WriteLine("2 - Симуляція поведінки користувачів у соціальній мережі");
-            Console.WriteLine("0 - Вихід");
+            ConsoleUI.WriteMenuItem(
+                1,
+                "Симуляція покупців у магазині");
+            ConsoleUI.WriteMenuItem(
+                2,
+                "Симуляція поведінки користувачів у соціальній мережі");
+            ConsoleUI.WriteMenuExit("Вихід");
             Console.WriteLine();
 
-            int choice = ConsoleHelper.ReadIntInRange("Ваш вибір: ", 0, 2);
+            int choice = ConsoleHelper.ReadIntInRange(
+                "Ваш вибір: ",
+                0,
+                2);
 
             switch (choice)
             {
@@ -35,7 +42,8 @@ internal class Program
                     break;
 
                 case 0:
-                    Console.WriteLine("Роботу програми завершено.");
+                    ConsoleUI.WriteSuccess(
+                        "Роботу програми завершено.");
                     return;
             }
         }
@@ -43,64 +51,89 @@ internal class Program
 
     private static void PrintHeader()
     {
-        Console.WriteLine();
-        Console.WriteLine("========================================================");
-        Console.WriteLine("                       ФІТ-2-15");
-        Console.WriteLine("         ПРАКТИЧНЕ ЗАВДАННЯ №4 З ООП");
-        Console.WriteLine("          СТРУКТУРИ, КЛАСИ ТА ФУНКЦІЇ");
-        Console.WriteLine("========================================================");
-        Console.WriteLine();
+        ConsoleUI.WriteBanner(
+            "ФІТ-2-15",
+            "ПРАКТИЧНЕ ЗАВДАННЯ №4 З ООП",
+            "СТРУКТУРИ, КЛАСИ ТА ФУНКЦІЇ");
     }
 
     private static void RunStoreMenu()
     {
-        Store store = new Store();
-        Customer[]? customers = null;
         Random random = new Random();
+        Store store = new Store(random);
+        Customer[]? customers = null;
 
         while (true)
         {
-            Console.WriteLine();
-            Console.WriteLine("========================================================");
-            Console.WriteLine("                    МАГАЗИН");
-            Console.WriteLine("========================================================");
-            Console.WriteLine("1 - Переглянути товари");
-            Console.WriteLine("2 - Запустити нову симуляцію покупців");
-            Console.WriteLine("3 - Переглянути рух товарів і залишки");
-            Console.WriteLine("4 - Переглянути статистику магазину");
-            Console.WriteLine("0 - Повернутися до головного меню");
+            ConsoleUI.WriteBanner(
+                "МАГАЗИН",
+                "СИМУЛЯЦІЯ ПОКУПОК");
+
+            ConsoleUI.WriteMenuItem(1, "Переглянути асортимент");
+            ConsoleUI.WriteMenuItem(2, "Запустити нову симуляцію покупців");
+            ConsoleUI.WriteMenuItem(3, "Переглянути рух товарів і залишки");
+            ConsoleUI.WriteMenuItem(4, "Переглянути статистику магазину");
+            ConsoleUI.WriteMenuExit("Повернутися до головного меню");
             Console.WriteLine();
 
-            int choice = ConsoleHelper.ReadIntInRange("Ваш вибір: ", 0, 4);
+            int choice = ConsoleHelper.ReadIntInRange(
+                "Ваш вибір: ",
+                0,
+                4);
 
             switch (choice)
             {
                 case 1:
+                {
                     store.ShowProducts();
                     ConsoleHelper.Pause();
                     break;
+                }
 
                 case 2:
+                {
+                    ConsoleUI.WriteSection("РЕЖИМ СИМУЛЯЦІЇ");
+                    ConsoleUI.WriteMenuItem(
+                        1,
+                        "Реалістичний: випадковий ліміт 1–15 товарів на покупця");
+                    ConsoleUI.WriteMenuItem(
+                        2,
+                        "За умовою завдання: покупки до вичерпання грошей або товарів");
+
+                    int mode = ConsoleHelper.ReadIntInRange(
+                        "Оберіть режим: ",
+                        1,
+                        2);
+
+                    bool realisticMode = mode == 1;
+
                     int customerCount = ConsoleHelper.ReadIntInRange(
                         "Введіть кількість покупців (від 1 до 1000): ",
                         1,
                         1000);
 
-                    store = new Store();
-                    customers = store.CreateCustomers(customerCount, random);
+                    store = new Store(random);
+                    customers = store.CreateCustomers(
+                        customerCount,
+                        random);
 
                     store.ShowProducts();
-                    store.RunSimulation(customers, random);
+                    store.RunSimulation(
+                        customers,
+                        random,
+                        realisticMode);
                     store.ShowInventoryChanges();
                     store.ShowResults(customers);
 
                     ConsoleHelper.Pause();
                     break;
+                }
 
                 case 3:
+                {
                     if (customers == null)
                     {
-                        Console.WriteLine(
+                        ConsoleUI.WriteWarning(
                             "Спочатку запустіть симуляцію покупців.");
                     }
                     else
@@ -110,11 +143,13 @@ internal class Program
 
                     ConsoleHelper.Pause();
                     break;
+                }
 
                 case 4:
+                {
                     if (customers == null)
                     {
-                        Console.WriteLine(
+                        ConsoleUI.WriteWarning(
                             "Спочатку запустіть симуляцію покупців.");
                     }
                     else
@@ -124,6 +159,7 @@ internal class Program
 
                     ConsoleHelper.Pause();
                     break;
+                }
 
                 case 0:
                     return;

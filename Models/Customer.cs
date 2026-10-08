@@ -9,6 +9,7 @@ public class Customer
     public decimal SpentMoney { get; private set; }
     public CustomerType Type { get; }
     public decimal ShoppingBudget { get; }
+    public int ShoppingItemLimit { get; }
     public List<Purchase> Cart { get; }
 
     public string TypeName => Type switch
@@ -24,13 +25,15 @@ public class Customer
         int cardNumber,
         decimal money,
         CustomerType type,
-        decimal shoppingBudget)
+        decimal shoppingBudget,
+        int shoppingItemLimit)
     {
         CardNumber = cardNumber;
         InitialMoney = money;
         Money = money;
         Type = type;
         ShoppingBudget = Math.Min(money, Math.Max(0, shoppingBudget));
+        ShoppingItemLimit = Math.Clamp(shoppingItemLimit, 1, 15);
         PurchasedItems = 0;
         SpentMoney = 0;
         Cart = new List<Purchase>();

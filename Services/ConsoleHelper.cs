@@ -11,7 +11,8 @@ public static class ConsoleHelper
             if (int.TryParse(Console.ReadLine(), out int value) && value > 0)
                 return value;
 
-            Console.WriteLine("Помилка. Введіть ціле число більше нуля.");
+            ConsoleUI.WriteError(
+                "Помилка. Введіть ціле число більше нуля.");
         }
     }
 
@@ -28,7 +29,8 @@ public static class ConsoleHelper
                 return value;
             }
 
-            Console.WriteLine($"Помилка. Введіть число від {min} до {max}.");
+            ConsoleUI.WriteError(
+                $"Помилка. Введіть число від {min} до {max}.");
         }
     }
 
@@ -42,14 +44,14 @@ public static class ConsoleHelper
             if (!string.IsNullOrWhiteSpace(value))
                 return value.Trim();
 
-            Console.WriteLine("Рядок не може бути порожнім.");
+            ConsoleUI.WriteError("Рядок не може бути порожнім.");
         }
     }
 
     public static void Pause()
     {
         Console.WriteLine();
-        Console.Write("Натисніть Enter, щоб продовжити...");
+        ConsoleUI.WriteInfo("Натисніть Enter, щоб продовжити...");
         Console.ReadLine();
         Console.WriteLine();
     }

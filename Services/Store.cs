@@ -4,6 +4,8 @@ namespace OOP_Lab4.Services;
 
 public class Store
 {
+    private const int MaxStockPerProduct = 250;
+
     public Product[] Products { get; }
     public decimal Profit { get; private set; }
     public int TotalItemsSold { get; private set; }
@@ -11,7 +13,14 @@ public class Store
     public int ProcessedCustomers { get; private set; }
 
     public Store()
+        : this(Random.Shared)
     {
+    }
+
+    public Store(Random random)
+    {
+        ArgumentNullException.ThrowIfNull(random);
+
         Profit = 0;
         TotalItemsSold = 0;
         PayingCustomers = 0;
@@ -19,16 +28,37 @@ public class Store
 
         Products = new Product[]
         {
-            new Product("Хліб", "Випічка", 45, 30),
-            new Product("Молоко", "Молочні", 68, 25),
-            new Product("Яблука", "Фрукти", 79, 25),
-            new Product("Шоколад", "Солодощі", 89, 20),
-            new Product("Рис", "Крупи", 105, 20),
-            new Product("Чай", "Напої", 135, 18),
-            new Product("Курятина", "М'ясо", 189, 16),
-            new Product("Сир", "Молочні", 225, 15),
-            new Product("Кава", "Напої", 310, 12),
-            new Product("Оливкова олія", "Бакалія", 420, 10)
+            CreateProduct("Хліб", "Випічка", 45, random),
+            CreateProduct("Батон", "Випічка", 38, random),
+            CreateProduct("Круасан", "Випічка", 52, random),
+
+            CreateProduct("Молоко", "Молочні", 68, random),
+            CreateProduct("Кефір", "Молочні", 72, random),
+            CreateProduct("Йогурт", "Молочні", 55, random),
+            CreateProduct("Сир", "Молочні", 225, random),
+            CreateProduct("Масло", "Молочні", 98, random),
+
+            CreateProduct("Яблука", "Фрукти", 79, random),
+            CreateProduct("Банани", "Фрукти", 95, random),
+            CreateProduct("Апельсини", "Фрукти", 110, random),
+
+            CreateProduct("Шоколад", "Солодощі", 89, random),
+            CreateProduct("Печиво", "Солодощі", 65, random),
+
+            CreateProduct("Рис", "Крупи", 105, random),
+            CreateProduct("Гречка", "Крупи", 115, random),
+            CreateProduct("Макарони", "Бакалія", 75, random),
+            CreateProduct("Оливкова олія", "Бакалія", 420, random),
+
+            CreateProduct("Чай", "Напої", 135, random),
+            CreateProduct("Кава", "Напої", 310, random),
+            CreateProduct("Вода", "Напої", 32, random),
+            CreateProduct("Сік", "Напої", 78, random),
+
+            CreateProduct("Курятина", "М'ясо", 189, random),
+            CreateProduct("Сосиски", "М'ясо", 170, random),
+
+            CreateProduct("Яйця", "Продукти", 92, random)
         };
     }
 
@@ -70,20 +100,30 @@ public class Store
                 money * budgetPercent / 100m,
                 2);
 
+            int shoppingItemLimit = random.Next(1, 16);
+
             customers[i] = new Customer(
                 cardNumber,
                 money,
                 type,
-                shoppingBudget);
+                shoppingBudget,
+                shoppingItemLimit);
         }
 
         return customers;
     }
 
-    public void RunSimulation(Customer[] customers, Random random)
+    public void RunSimulation(
+        Customer[] customers,
+        Random random,
+        bool realisticMode)
     {
-        Console.WriteLine();
-        Console.WriteLine("========== СИМУЛЯЦІЯ ПОКУПОК ==========");
+        ConsoleUI.WriteSection("СИМУЛЯЦІЯ ПОКУПОК");
+
+        ConsoleUI.WriteInfo(
+            realisticMode
+                ? "Режим: реалістичний, кожен покупець має випадковий ліміт 1–15 товарів."
+                : "Режим: за умовою завдання, покупки тривають до вичерпання грошей або товарів.");
 
         for (int i = 0; i < customers.Length; i++)
         {
@@ -92,9 +132,9 @@ public class Store
                 int remainingCustomers = customers.Length - i;
 
                 Console.WriteLine();
-                Console.WriteLine(
+                ConsoleUI.WriteWarning(
                     "У магазині закінчилися всі товари.");
-                Console.WriteLine(
+                ConsoleUI.WriteWarning(
                     $"Без покупок залишилося покупців: {remainingCustomers}.");
 
                 break;
@@ -103,17 +143,41 @@ public class Store
             Customer customer = customers[i];
             ProcessedCustomers++;
 
-            Console.WriteLine();
-            Console.WriteLine($"Покупець  : {i + 1}");
-            Console.WriteLine($"Картка    : №{customer.CardNumber}");
-            Console.WriteLine($"Тип       : {customer.TypeName}");
-            Console.WriteLine($"Кошти     : {customer.InitialMoney:N2} грн");
-            Console.WriteLine($"План      : {customer.ShoppingBudget:N2} грн");
+            ConsoleUI.WriteSection(
+                $"ПОКУПЕЦЬ {i + 1} / {customers.Length}");
+
+            ConsoleUI.WriteLabel(
+                "Картка:",
+                $"№{customer.CardNumber}");
+            ConsoleUI.WriteLabel(
+                "Тип покупця:",
+                customer.TypeName);
+            ConsoleUI.WriteLabel(
+                "Початкові кошти:",
+                $"{customer.InitialMoney:N2} грн");
+            ConsoleUI.WriteLabel(
+                "Плановий бюджет:",
+                $"{customer.ShoppingBudget:N2} грн");
+
+            if (realisticMode)
+            {
+                ConsoleUI.WriteLabel(
+                    "Ліміт кошика:",
+                    $"{customer.ShoppingItemLimit} од.");
+            }
 
             int lastProductIndex = -1;
 
             while (true)
             {
+                if (realisticMode &&
+                    customer.PurchasedItems >= customer.ShoppingItemLimit)
+                {
+                    ConsoleUI.WriteInfo(
+                        $"Досягнуто ліміт кошика: {customer.ShoppingItemLimit} од.");
+                    break;
+                }
+
                 int productIndex = FindPreferredAffordableProductIndex(
                     customer,
                     random,
@@ -124,10 +188,15 @@ public class Store
 
                 Product selectedProduct = Products[productIndex];
 
+                int remainingLimit = realisticMode
+                    ? customer.ShoppingItemLimit - customer.PurchasedItems
+                    : int.MaxValue;
+
                 int quantity = GetPurchaseQuantity(
                     customer,
                     selectedProduct,
-                    random);
+                    random,
+                    remainingLimit);
 
                 if (quantity <= 0)
                     break;
@@ -142,7 +211,7 @@ public class Store
                 }
 
                 Console.WriteLine(
-                    $"  У кошик: {purchase.ProductName,-18} " +
+                    $"  + {purchase.ProductName,-18} " +
                     $"{purchase.Quantity} шт. x " +
                     $"{purchase.UnitPrice:N2} грн = " +
                     $"{purchase.TotalPrice:N2} грн");
@@ -153,7 +222,10 @@ public class Store
             if (customer.SpentMoney > 0)
                 PayingCustomers++;
 
-            ShowReceipt(customer, i + 1);
+            ShowReceipt(
+                customer,
+                i + 1,
+                realisticMode);
         }
     }
 
@@ -201,64 +273,90 @@ public class Store
 
     public void ShowProducts()
     {
-        Console.WriteLine();
-        Console.WriteLine(
-            "=================== ТОВАРИ В МАГАЗИНІ ===================");
-        Console.WriteLine(
-            "Товар              | Категорія      |     Ціна | Залишок");
-        Console.WriteLine(
-            "-----------------------------------------------------------");
+        ConsoleUI.WriteSection("АСОРТИМЕНТ МАГАЗИНУ");
 
-        foreach (Product product in Products)
+        Console.WriteLine(
+            " # | Товар              | Категорія      |     Ціна | Склад");
+        Console.WriteLine(
+            "---+--------------------+----------------+----------+------------------");
+
+        for (int i = 0; i < Products.Length; i++)
         {
+            Product product = Products[i];
+
+            string stockBar = ConsoleUI.BuildBar(
+                product.Quantity,
+                MaxStockPerProduct);
+
             Console.WriteLine(
+                $"{i + 1,2} | " +
                 $"{product.Name,-18} | " +
                 $"{product.Category,-14} | " +
                 $"{product.Price,8:N2} | " +
-                $"{product.Quantity,7}");
+                $"{stockBar} {product.Quantity,3}");
         }
+
+        Console.WriteLine();
+        ConsoleUI.WriteInfo(
+            $"Позицій в асортименті: {Products.Length}. " +
+            $"Кількість кожного товару генерується випадково від 40 до {MaxStockPerProduct}.");
     }
 
     public void ShowInventoryChanges()
     {
-        Console.WriteLine();
+        ConsoleUI.WriteSection("РУХ ТОВАРІВ І ЗАЛИШКИ");
+
         Console.WriteLine(
-            "================ РУХ ТОВАРІВ І ЗАЛИШКИ =================");
+            "Товар              | Було | Продано | Залишок | Стан");
         Console.WriteLine(
-            "Товар              | Було | Продано | Залишилось");
-        Console.WriteLine(
-            "----------------------------------------------------------");
+            "-------------------+------+---------+---------+--------------");
 
         foreach (Product product in Products)
         {
+            string bar = ConsoleUI.BuildBar(
+                product.Quantity,
+                product.InitialQuantity,
+                10);
+
             Console.WriteLine(
                 $"{product.Name,-18} | " +
                 $"{product.InitialQuantity,4} | " +
                 $"{product.SoldQuantity,7} | " +
-                $"{product.Quantity,10}");
+                $"{product.Quantity,7} | " +
+                $"{bar}");
         }
     }
 
     public void ShowResults(Customer[] customers)
     {
-        Console.WriteLine();
-        Console.WriteLine(
-            "================ СТАТИСТИКА МАГАЗИНУ =================");
+        ConsoleUI.WriteSection("СТАТИСТИКА МАГАЗИНУ");
 
         decimal averageReceipt =
             PayingCustomers > 0
                 ? Profit / PayingCustomers
                 : 0;
 
-        Console.WriteLine($"Заплановано покупців: {customers.Length}");
-        Console.WriteLine($"Обслуговано покупців: {ProcessedCustomers}");
-        Console.WriteLine($"Покупців із покупками: {PayingCustomers}");
-        Console.WriteLine(
-            $"Не обслуговано через відсутність товару: " +
+        ConsoleUI.WriteLabel(
+            "Заплановано:",
+            $"{customers.Length} покупців");
+        ConsoleUI.WriteLabel(
+            "Обслуговано:",
+            $"{ProcessedCustomers} покупців");
+        ConsoleUI.WriteLabel(
+            "З покупками:",
+            $"{PayingCustomers} покупців");
+        ConsoleUI.WriteLabel(
+            "Не обслуговано:",
             $"{customers.Length - ProcessedCustomers}");
-        Console.WriteLine($"Продано одиниць товару: {TotalItemsSold}");
-        Console.WriteLine($"Прибуток магазину: {Profit:N2} грн");
-        Console.WriteLine($"Середній чек: {averageReceipt:N2} грн");
+        ConsoleUI.WriteLabel(
+            "Продано товарів:",
+            $"{TotalItemsSold} од.");
+        ConsoleUI.WriteLabel(
+            "Прибуток:",
+            $"{Profit:N2} грн");
+        ConsoleUI.WriteLabel(
+            "Середній чек:",
+            $"{averageReceipt:N2} грн");
 
         if (customers.Length == 0)
             return;
@@ -294,43 +392,52 @@ public class Store
         }
 
         Console.WriteLine();
-        Console.WriteLine(
-            "Покупець, який придбав найбільшу кількість товарів:");
-        Console.WriteLine(
-            $"Картка №{maxItemsCustomer.CardNumber}, " +
-            $"товарів: {maxItemsCustomer.PurchasedItems}");
-
-        Console.WriteLine();
-        Console.WriteLine(
-            "Покупець, який витратив найбільше грошей:");
-        Console.WriteLine(
-            $"Картка №{maxSpentCustomer.CardNumber}, " +
-            $"витрачено: {maxSpentCustomer.SpentMoney:N2} грн");
-
-        Console.WriteLine();
-        Console.WriteLine(
+        ConsoleUI.WriteSuccess(
+            $"Найбільше товарів: картка №{maxItemsCustomer.CardNumber} — " +
+            $"{maxItemsCustomer.PurchasedItems} од.");
+        ConsoleUI.WriteSuccess(
+            $"Найбільші витрати: картка №{maxSpentCustomer.CardNumber} — " +
+            $"{maxSpentCustomer.SpentMoney:N2} грн");
+        ConsoleUI.WriteInfo(
             $"Найпопулярніший товар: {mostPopular.Name} — " +
-            $"{mostPopular.SoldQuantity} шт.");
-        Console.WriteLine(
+            $"{mostPopular.SoldQuantity} од.");
+        ConsoleUI.WriteInfo(
             $"Найменш популярний товар: {leastPopular.Name} — " +
-            $"{leastPopular.SoldQuantity} шт.");
+            $"{leastPopular.SoldQuantity} од.");
 
         Console.WriteLine();
-        Console.WriteLine("Статистика всіх покупців:");
+        Console.WriteLine(
+            " # | Картка | Тип         | Товарів | Витрачено   | Залишок");
+        Console.WriteLine(
+            "---+--------+-------------+---------+-------------+-------------");
 
         for (int i = 0; i < customers.Length; i++)
         {
             Customer customer = customers[i];
 
             Console.WriteLine(
-                $"{i + 1,3}. Картка №{customer.CardNumber,-4} | " +
+                $"{i + 1,2} | " +
+                $"{customer.CardNumber,6} | " +
                 $"{customer.TypeName,-11} | " +
-                $"Старт: {customer.InitialMoney,9:N2} | " +
-                $"План: {customer.ShoppingBudget,9:N2} | " +
-                $"Залишок: {customer.Money,9:N2} | " +
-                $"Товарів: {customer.PurchasedItems,3} | " +
-                $"Витрачено: {customer.SpentMoney,9:N2}");
+                $"{customer.PurchasedItems,7} | " +
+                $"{customer.SpentMoney,11:N2} | " +
+                $"{customer.Money,11:N2}");
         }
+    }
+
+    private static Product CreateProduct(
+        string name,
+        string category,
+        decimal price,
+        Random random)
+    {
+        int quantity = random.Next(40, MaxStockPerProduct + 1);
+
+        return new Product(
+            name,
+            category,
+            price,
+            quantity);
     }
 
     private int FindPreferredAffordableProductIndex(
@@ -395,13 +502,16 @@ public class Store
     private int GetPurchaseQuantity(
         Customer customer,
         Product product,
-        Random random)
+        Random random,
+        int remainingLimit)
     {
         int maxByMoney = (int)(customer.Money / product.Price);
 
         int maxQuantity = Math.Min(
             3,
-            Math.Min(product.Quantity, maxByMoney));
+            Math.Min(
+                product.Quantity,
+                Math.Min(maxByMoney, remainingLimit)));
 
         if (maxQuantity <= 0)
             return 0;
@@ -461,51 +571,80 @@ public class Store
         return true;
     }
 
-    private void ShowReceipt(Customer customer, int receiptNumber)
+    private void ShowReceipt(
+        Customer customer,
+        int receiptNumber,
+        bool realisticMode)
     {
-        Console.WriteLine();
-        Console.WriteLine("==============================================");
-        Console.WriteLine($"               ЧЕК №{receiptNumber:0000}");
-        Console.WriteLine("==============================================");
-        Console.WriteLine($"Картка покупця: №{customer.CardNumber}");
-        Console.WriteLine($"Тип покупця: {customer.TypeName}");
+        ConsoleUI.WriteSection(
+            $"ЧЕК №{receiptNumber:0000}");
+
+        ConsoleUI.WriteLabel(
+            "Картка покупця:",
+            $"№{customer.CardNumber}");
+        ConsoleUI.WriteLabel(
+            "Тип покупця:",
+            customer.TypeName);
+        ConsoleUI.WriteLabel(
+            "Початкові кошти:",
+            $"{customer.InitialMoney:N2} грн");
+        ConsoleUI.WriteLabel(
+            "Плановий бюджет:",
+            $"{customer.ShoppingBudget:N2} грн");
+
+        if (realisticMode)
+        {
+            ConsoleUI.WriteLabel(
+                "Ліміт кошика:",
+                $"{customer.ShoppingItemLimit} од.");
+        }
+
         Console.WriteLine(
-            $"Початкові кошти: {customer.InitialMoney:N2} грн");
+            "----------------------------------------------------------------");
         Console.WriteLine(
-            $"Плановий бюджет: {customer.ShoppingBudget:N2} грн");
-        Console.WriteLine("----------------------------------------------");
+            "Товар              | К-сть | Ціна       | Сума");
+        Console.WriteLine(
+            "-------------------+-------+------------+-------------");
 
         if (customer.Cart.Count == 0)
         {
-            Console.WriteLine("Покупок немає.");
+            ConsoleUI.WriteWarning("Покупок немає.");
         }
         else
         {
             foreach (Purchase purchase in customer.Cart)
             {
                 Console.WriteLine(
-                    $"{purchase.ProductName,-18} " +
-                    $"{purchase.Quantity,2} x " +
-                    $"{purchase.UnitPrice,7:N2} = " +
-                    $"{purchase.TotalPrice,9:N2} грн");
+                    $"{purchase.ProductName,-18} | " +
+                    $"{purchase.Quantity,5} | " +
+                    $"{purchase.UnitPrice,10:N2} | " +
+                    $"{purchase.TotalPrice,11:N2}");
             }
         }
 
-        Console.WriteLine("----------------------------------------------");
         Console.WriteLine(
-            $"Кількість товарів: {customer.PurchasedItems}");
-        Console.WriteLine(
-            $"До сплати: {customer.SpentMoney:N2} грн");
-        Console.WriteLine(
-            $"Залишок коштів: {customer.Money:N2} грн");
+            "----------------------------------------------------------------");
+
+        ConsoleUI.WriteLabel(
+            "Кількість товарів:",
+            $"{customer.PurchasedItems} од.");
+        ConsoleUI.WriteLabel(
+            "До сплати:",
+            $"{customer.SpentMoney:N2} грн");
+        ConsoleUI.WriteLabel(
+            "Залишок коштів:",
+            $"{customer.Money:N2} грн");
 
         if (customer.SpentMoney > customer.ShoppingBudget)
         {
-            Console.WriteLine(
-                $"Перевищення планового бюджету: " +
-                $"{customer.SpentMoney - customer.ShoppingBudget:N2} грн");
+            ConsoleUI.WriteWarning(
+                $"Плановий бюджет перевищено на " +
+                $"{customer.SpentMoney - customer.ShoppingBudget:N2} грн.");
         }
-
-        Console.WriteLine("==============================================");
+        else
+        {
+            ConsoleUI.WriteSuccess(
+                "Покупець залишився в межах планового бюджету.");
+        }
     }
 }
